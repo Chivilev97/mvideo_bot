@@ -17,6 +17,6 @@ def get_product(product_id):
 
 
 def get_price(product):
-    url_price = product[5]
+    url_price = f'https://www.mvideo.ru/bff/products/prices?productIds={product[0]}&isPromoApplied=true&addBonusRubles=true'
     response_price = requests.get(url=url_price, cookies=cookies).json()
     return response_price['body']['materialPrices'][0]['price']['salePrice']

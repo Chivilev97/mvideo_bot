@@ -11,12 +11,13 @@ def db_find_old_product():  # Поиск записи где last_update бол�
     return db_cur.fetchone()
 
 
-async def send_notification(url, old_price, new_price):
-    await bot.send_message('437912785', f"Цена изменилась с {old_price} на {new_price}. Ссылка на товар: {url}")
+async def send_notification(tg_chat, url, old_price, new_price):
+    await bot.send_message(tg_chat, f"Цена изменилась с {old_price} на {new_price}. Ссылка на товар: {url}")
 
 
 while True:
     product = db_find_old_product()
+
     if product:
         current_time = dt.datetime.now()
         price = mvideo.get_price(product)
@@ -26,9 +27,12 @@ while True:
             db_cur.execute("UPDATE products SET last_update = %s;", [current_time])
             db_conn.commit()
         else:
+            user_id = product[5]
             db_cur.execute("UPDATE products SET price = %s;", [price])
             db_cur.execute("UPDATE products SET last_update = %s;", [current_time])
             db_conn.commit()
-            asyncio.run(send_notification(url, old_price, price))
+            db_cur.execute("SELECT tg_chat FROM users WHERE id = %s;", [user_id])
+            tg_chat = db_cur.fetchone()[0]
+            asyncio.run(send_notification(tg_chat, url, old_price, price))
 
     time.sleep(3600)
